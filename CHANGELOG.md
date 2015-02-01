@@ -7,6 +7,12 @@ and this gem adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-03-26
+
+### Changed
+
+- Fix README compliance (sponsor badge format, license link, quote style)
+
 ## [0.1.0] - 2026-03-26
 
 ### Added
