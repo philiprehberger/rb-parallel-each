@@ -148,6 +148,76 @@ RSpec.describe Philiprehberger::ParallelEach do
     end
   end
 
+  describe '.map_with_index' do
+    it 'passes item and index to the block' do
+      result = described_class.map_with_index(%w[a b c], concurrency: 2) { |item, idx| "#{item}#{idx}" }
+      expect(result).to eq(%w[a0 b1 c2])
+    end
+
+    it 'preserves order' do
+      result = described_class.map_with_index((1..10).to_a, concurrency: 4) { |_item, idx| idx }
+      expect(result).to eq((0..9).to_a)
+    end
+  end
+
+  describe '.each_with_index' do
+    it 'yields item and index' do
+      pairs = []
+      mutex = Mutex.new
+      described_class.each_with_index(%w[a b c], concurrency: 2) do |item, idx|
+        mutex.synchronize { pairs << [item, idx] }
+      end
+      expect(pairs.sort_by(&:last)).to eq([['a', 0], ['b', 1], ['c', 2]])
+    end
+
+    it 'returns the original collection' do
+      collection = [1, 2, 3]
+      result = described_class.each_with_index(collection, concurrency: 2) { |_item, _idx| }
+      expect(result).to equal(collection)
+    end
+  end
+
+  describe '.none?' do
+    it 'returns true when no elements match' do
+      result = described_class.none?([1, 3, 5], concurrency: 2, &:even?)
+      expect(result).to be true
+    end
+
+    it 'returns false when any element matches' do
+      result = described_class.none?([1, 2, 3], concurrency: 2, &:even?)
+      expect(result).to be false
+    end
+
+    it 'returns true for empty collection' do
+      result = described_class.none?([], concurrency: 2) { |_| true }
+      expect(result).to be true
+    end
+  end
+
+  describe '.count' do
+    it 'counts matching elements' do
+      result = described_class.count((1..10).to_a, concurrency: 3, &:even?)
+      expect(result).to eq(5)
+    end
+
+    it 'returns zero when nothing matches' do
+      result = described_class.count([1, 3, 5], concurrency: 2, &:even?)
+      expect(result).to eq(0)
+    end
+  end
+
+  describe '.reduce' do
+    it 'reduces collection with initial value' do
+      result = described_class.reduce([1, 2, 3, 4], 0, concurrency: 2) { |acc, item| acc + item }
+      expect(result).to eq(10)
+    end
+
+    it 'works with string accumulation' do
+      result = described_class.reduce(%w[a b c], '', concurrency: 2) { |acc, item| acc + item }
+      expect(result).to eq('abc')
+    end
+  end
+
   describe 'error propagation' do
     it 're-raises the first error encountered in map' do
       expect do

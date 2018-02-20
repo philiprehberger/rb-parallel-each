@@ -59,6 +59,62 @@ module Philiprehberger
       pool.run(collection, &block).flat_map { |r| Array(r.value) }
     end
 
+    # Parallel map with index. Passes (item, index) to the block.
+    #
+    # @param collection [Enumerable] items to process
+    # @param concurrency [Integer] number of threads (default: number of processors)
+    # @yield [item, index] block to execute for each item with its index
+    # @return [Array] results in the same order as the input
+    def self.map_with_index(collection, concurrency: Etc.nprocessors)
+      arr = collection.is_a?(Array) ? collection : collection.to_a
+      map(arr.each_with_index.to_a, concurrency: concurrency) { |pair| yield(pair[0], pair[1]) }
+    end
+
+    # Parallel each with index. Passes (item, index) to the block.
+    #
+    # @param collection [Enumerable] items to process
+    # @param concurrency [Integer] number of threads (default: number of processors)
+    # @yield [item, index] block to execute for each item with its index
+    # @return [Enumerable] the original collection
+    def self.each_with_index(collection, concurrency: Etc.nprocessors)
+      arr = collection.is_a?(Array) ? collection : collection.to_a
+      map(arr.each_with_index.to_a, concurrency: concurrency) { |pair| yield(pair[0], pair[1]) }
+      collection
+    end
+
+    # Parallel none? — complement of any?.
+    #
+    # @param collection [Enumerable] items to test
+    # @param concurrency [Integer] number of threads (default: number of processors)
+    # @yield [item] block that returns truthy/falsy
+    # @return [Boolean]
+    def self.none?(collection, concurrency: Etc.nprocessors, &block)
+      !any?(collection, concurrency: concurrency, &block)
+    end
+
+    # Parallel count of matching elements.
+    #
+    # @param collection [Enumerable] items to count
+    # @param concurrency [Integer] number of threads (default: number of processors)
+    # @yield [item] block that returns truthy to count the item
+    # @return [Integer]
+    def self.count(collection, concurrency: Etc.nprocessors, &block)
+      results = map(collection, concurrency: concurrency, &block)
+      results.count { |r| r }
+    end
+
+    # Sequential reduction over the collection.
+    #
+    # @param collection [Enumerable] items to reduce
+    # @param initial [Object] initial accumulator value
+    # @param concurrency [Integer] unused, accepted for API consistency
+    # @yield [accumulator, item] block that returns the new accumulator
+    # @return [Object] final accumulator value
+    def self.reduce(collection, initial, concurrency: Etc.nprocessors, &block)
+      items = collection.is_a?(Array) ? collection : collection.to_a
+      items.reduce(initial, &block)
+    end
+
     # Parallel any? with short-circuit behavior.
     # Returns true as soon as any block invocation returns truthy.
     #

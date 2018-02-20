@@ -2,7 +2,11 @@
 
 [![Tests](https://github.com/philiprehberger/rb-parallel-each/actions/workflows/ci.yml/badge.svg)](https://github.com/philiprehberger/rb-parallel-each/actions/workflows/ci.yml)
 [![Gem Version](https://badge.fury.io/rb/philiprehberger-parallel_each.svg)](https://rubygems.org/gems/philiprehberger-parallel_each)
+[![GitHub release](https://img.shields.io/github/v/release/philiprehberger/rb-parallel-each)](https://github.com/philiprehberger/rb-parallel-each/releases)
+[![Last updated](https://img.shields.io/github/last-commit/philiprehberger/rb-parallel-each)](https://github.com/philiprehberger/rb-parallel-each/commits/main)
 [![License](https://img.shields.io/github/license/philiprehberger/rb-parallel-each)](LICENSE)
+[![Bug Reports](https://img.shields.io/github/issues/philiprehberger/rb-parallel-each/bug)](https://github.com/philiprehberger/rb-parallel-each/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
+[![Feature Requests](https://img.shields.io/github/issues/philiprehberger/rb-parallel-each/enhancement)](https://github.com/philiprehberger/rb-parallel-each/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
 [![Sponsor](https://img.shields.io/badge/sponsor-GitHub%20Sponsors-ec6cb9)](https://github.com/sponsors/philiprehberger)
 
 Parallel iteration with configurable thread pool and ordered results
@@ -34,22 +38,57 @@ require "philiprehberger/parallel_each"
 results = Philiprehberger::ParallelEach.map(urls, concurrency: 8) do |url|
   fetch(url)
 end
+```
 
-# Parallel each
+### Parallel Each
+
+```ruby
 Philiprehberger::ParallelEach.each(items, concurrency: 4) do |item|
   process(item)
 end
+```
 
-# Parallel select (filter)
+### Parallel Select
+
+```ruby
 even = Philiprehberger::ParallelEach.select(numbers, concurrency: 4, &:even?)
+```
 
-# Parallel flat_map
+### Parallel Flat Map
+
+```ruby
 pairs = Philiprehberger::ParallelEach.flat_map(records, concurrency: 4) do |r|
   [r.id, r.name]
 end
+```
 
-# Short-circuit any?
+### Map and Each with Index
+
+```ruby
+# map_with_index passes (item, index) to the block
+labeled = Philiprehberger::ParallelEach.map_with_index(items, concurrency: 4) do |item, idx|
+  "#{idx}: #{item}"
+end
+
+# each_with_index for side effects with index access
+Philiprehberger::ParallelEach.each_with_index(items, concurrency: 4) do |item, idx|
+  puts "Processing item #{idx}: #{item}"
+end
+```
+
+### Short-Circuit Methods
+
+```ruby
 has_admin = Philiprehberger::ParallelEach.any?(users, concurrency: 4, &:admin?)
+all_valid = Philiprehberger::ParallelEach.none?(records, concurrency: 4, &:invalid?)
+```
+
+### Count and Reduce
+
+```ruby
+even_count = Philiprehberger::ParallelEach.count(numbers, concurrency: 4, &:even?)
+
+total = Philiprehberger::ParallelEach.reduce([1, 2, 3, 4], 0) { |acc, item| acc + item }
 ```
 
 ### Concurrency
@@ -82,30 +121,18 @@ end
 
 ## API
 
-### `ParallelEach.map(collection, concurrency: Etc.nprocessors) { |item| ... }`
-
-Parallel map that returns results in the same order as the input.
-
-| Parameter | Description |
-|-----------|-------------|
-| `collection` | Any `Enumerable` |
-| `concurrency` | Number of threads (default: `Etc.nprocessors`) |
-
-### `ParallelEach.each(collection, concurrency: Etc.nprocessors) { |item| ... }`
-
-Parallel each. Returns the original collection.
-
-### `ParallelEach.select(collection, concurrency: Etc.nprocessors) { |item| ... }`
-
-Parallel filter. Returns matching items in input order.
-
-### `ParallelEach.flat_map(collection, concurrency: Etc.nprocessors) { |item| ... }`
-
-Parallel flat_map. Flattens one level, preserving input order.
-
-### `ParallelEach.any?(collection, concurrency: Etc.nprocessors) { |item| ... }`
-
-Parallel any? with short-circuit behavior. Returns `true` as soon as any block invocation returns truthy.
+| Method | Description |
+|--------|-------------|
+| `ParallelEach.map(collection, concurrency:) { \|item\| }` | Parallel map preserving input order |
+| `ParallelEach.each(collection, concurrency:) { \|item\| }` | Parallel each, returns original collection |
+| `ParallelEach.select(collection, concurrency:) { \|item\| }` | Parallel filter preserving input order |
+| `ParallelEach.flat_map(collection, concurrency:) { \|item\| }` | Parallel flat_map, flattens one level |
+| `ParallelEach.any?(collection, concurrency:) { \|item\| }` | Short-circuit any? |
+| `ParallelEach.none?(collection, concurrency:) { \|item\| }` | Complement of any? |
+| `ParallelEach.map_with_index(collection, concurrency:) { \|item, idx\| }` | Parallel map with index |
+| `ParallelEach.each_with_index(collection, concurrency:) { \|item, idx\| }` | Parallel each with index |
+| `ParallelEach.count(collection, concurrency:) { \|item\| }` | Count matching elements |
+| `ParallelEach.reduce(collection, initial, concurrency:) { \|acc, item\| }` | Sequential reduction |
 
 ## Development
 
@@ -114,6 +141,13 @@ bundle install
 bundle exec rspec
 bundle exec rubocop
 ```
+
+## Support
+
+If you find this package useful, consider giving it a star on GitHub — it helps motivate continued maintenance and development.
+
+[![LinkedIn](https://img.shields.io/badge/Philip%20Rehberger-LinkedIn-0A66C2?logo=linkedin)](https://www.linkedin.com/in/philiprehberger)
+[![More packages](https://img.shields.io/badge/more-open%20source%20packages-blue)](https://philiprehberger.com/open-source-packages)
 
 ## License
 
