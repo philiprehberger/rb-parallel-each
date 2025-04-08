@@ -115,6 +115,89 @@ module Philiprehberger
       items.reduce(initial, &block)
     end
 
+    # Parallel reject (inverse of select) that preserves input order.
+    #
+    # @param collection [Enumerable] items to filter
+    # @param concurrency [Integer] number of threads (default: number of processors)
+    # @yield [item] block that returns truthy to reject the item
+    # @return [Array] items for which the block returned falsy, in original order
+    def self.reject(collection, concurrency: Etc.nprocessors, &block)
+      return collection.reject(&block) if concurrency <= 1
+
+      pool = WorkerPool.new(concurrency: concurrency)
+      results = pool.run(collection, &block)
+      arr = collection.is_a?(Array) ? collection : collection.to_a
+      results.reject(&:value).map { |r| arr[r.index] }
+    end
+
+    # Parallel find with short-circuit behavior.
+    # Returns the first element for which the block returns truthy, or nil.
+    #
+    # @param collection [Enumerable] items to search
+    # @param concurrency [Integer] number of threads (default: number of processors)
+    # @yield [item] block that returns truthy/falsy
+    # @return [Object, nil] the first matching element or nil
+    def self.find(collection, concurrency: Etc.nprocessors, &block)
+      return collection.find(&block) if concurrency <= 1
+
+      queue = Queue.new
+      arr = collection.is_a?(Array) ? collection : collection.to_a
+      arr.each_with_index { |item, idx| queue << [idx, item] }
+      concurrency.times { queue << :stop }
+
+      found_item = nil
+      found_index = nil
+      mutex = Mutex.new
+      first_error = nil
+      error_mutex = Mutex.new
+
+      threads = Array.new([concurrency, 1].max) do
+        Thread.new do
+          loop do
+            work = queue.pop
+            break if work == :stop
+            break if mutex.synchronize { !found_item.nil? }
+
+            idx, item = work
+
+            begin
+              if block.call(item)
+                mutex.synchronize do
+                  if found_item.nil? || idx < found_index
+                    found_item = item
+                    found_index = idx
+                  end
+                end
+                break
+              end
+            rescue StandardError => e
+              error_mutex.synchronize { first_error ||= e }
+              break
+            end
+          end
+        end
+      end
+
+      threads.each(&:join)
+
+      raise first_error if first_error
+
+      found_item
+    end
+
+    # Parallel all? with short-circuit behavior.
+    # Returns false as soon as any block invocation returns falsy.
+    #
+    # @param collection [Enumerable] items to test
+    # @param concurrency [Integer] number of threads (default: number of processors)
+    # @yield [item] block that returns truthy/falsy
+    # @return [Boolean]
+    def self.all?(collection, concurrency: Etc.nprocessors, &block)
+      return collection.all?(&block) if concurrency <= 1
+
+      !any?(collection, concurrency: concurrency) { |item| !block.call(item) }
+    end
+
     # Parallel any? with short-circuit behavior.
     # Returns true as soon as any block invocation returns truthy.
     #

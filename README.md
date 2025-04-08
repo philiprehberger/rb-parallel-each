@@ -43,10 +43,17 @@ Philiprehberger::ParallelEach.each(items, concurrency: 4) do |item|
 end
 ```
 
-### Parallel Select
+### Parallel Select and Reject
 
 ```ruby
 even = Philiprehberger::ParallelEach.select(numbers, concurrency: 4, &:even?)
+odd = Philiprehberger::ParallelEach.reject(numbers, concurrency: 4, &:even?)
+```
+
+### Parallel Find
+
+```ruby
+admin = Philiprehberger::ParallelEach.find(users, concurrency: 4, &:admin?)
 ```
 
 ### Parallel Flat Map
@@ -75,7 +82,8 @@ end
 
 ```ruby
 has_admin = Philiprehberger::ParallelEach.any?(users, concurrency: 4, &:admin?)
-all_valid = Philiprehberger::ParallelEach.none?(records, concurrency: 4, &:invalid?)
+all_valid = Philiprehberger::ParallelEach.all?(users, concurrency: 4, &:valid?)
+no_errors = Philiprehberger::ParallelEach.none?(records, concurrency: 4, &:invalid?)
 ```
 
 ### Count and Reduce
@@ -121,8 +129,11 @@ end
 | `ParallelEach.map(collection, concurrency:) { \|item\| }` | Parallel map preserving input order |
 | `ParallelEach.each(collection, concurrency:) { \|item\| }` | Parallel each, returns original collection |
 | `ParallelEach.select(collection, concurrency:) { \|item\| }` | Parallel filter preserving input order |
+| `ParallelEach.reject(collection, concurrency:) { \|item\| }` | Parallel inverse filter preserving input order |
 | `ParallelEach.flat_map(collection, concurrency:) { \|item\| }` | Parallel flat_map, flattens one level |
+| `ParallelEach.find(collection, concurrency:) { \|item\| }` | Short-circuit find, returns first match or nil |
 | `ParallelEach.any?(collection, concurrency:) { \|item\| }` | Short-circuit any? |
+| `ParallelEach.all?(collection, concurrency:) { \|item\| }` | Short-circuit all? |
 | `ParallelEach.none?(collection, concurrency:) { \|item\| }` | Complement of any? |
 | `ParallelEach.map_with_index(collection, concurrency:) { \|item, idx\| }` | Parallel map with index |
 | `ParallelEach.each_with_index(collection, concurrency:) { \|item, idx\| }` | Parallel each with index |

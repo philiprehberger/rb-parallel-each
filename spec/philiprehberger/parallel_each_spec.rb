@@ -218,6 +218,72 @@ RSpec.describe Philiprehberger::ParallelEach do
     end
   end
 
+  describe '.reject' do
+    it 'filters out elements where block returns truthy' do
+      result = described_class.reject((1..10).to_a, concurrency: 3, &:even?)
+      expect(result).to eq([1, 3, 5, 7, 9])
+    end
+
+    it 'preserves input order' do
+      result = described_class.reject((1..20).to_a, concurrency: 4) { |n| n <= 10 }
+      expect(result).to eq((11..20).to_a)
+    end
+
+    it 'returns all elements when nothing is rejected' do
+      result = described_class.reject([1, 3, 5], concurrency: 2, &:even?)
+      expect(result).to eq([1, 3, 5])
+    end
+
+    it 'returns empty array when all are rejected' do
+      result = described_class.reject([2, 4, 6], concurrency: 2, &:even?)
+      expect(result).to eq([])
+    end
+  end
+
+  describe '.find' do
+    it 'returns the first matching element' do
+      result = described_class.find([1, 2, 3, 4], concurrency: 2, &:even?)
+      expect([2, 4]).to include(result)
+    end
+
+    it 'returns nil when no match is found' do
+      result = described_class.find([1, 3, 5], concurrency: 2, &:even?)
+      expect(result).to be_nil
+    end
+
+    it 'returns nil for empty collection' do
+      result = described_class.find([], concurrency: 2) { |_| true }
+      expect(result).to be_nil
+    end
+
+    it 'falls back to sequential when concurrency is 1' do
+      result = described_class.find([1, 2, 3], concurrency: 1, &:even?)
+      expect(result).to eq(2)
+    end
+  end
+
+  describe '.all?' do
+    it 'returns true when all elements match' do
+      result = described_class.all?([2, 4, 6], concurrency: 2, &:even?)
+      expect(result).to be true
+    end
+
+    it 'returns false when any element does not match' do
+      result = described_class.all?([2, 3, 4], concurrency: 2, &:even?)
+      expect(result).to be false
+    end
+
+    it 'returns true for empty collection' do
+      result = described_class.all?([], concurrency: 2) { |_| false }
+      expect(result).to be true
+    end
+
+    it 'falls back to sequential when concurrency is 1' do
+      result = described_class.all?([2, 4, 6], concurrency: 1, &:even?)
+      expect(result).to be true
+    end
+  end
+
   describe 'error propagation' do
     it 're-raises the first error encountered in map' do
       expect do
