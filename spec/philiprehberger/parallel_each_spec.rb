@@ -125,12 +125,10 @@ RSpec.describe Philiprehberger::ParallelEach do
 
     it 'propagates errors from the block' do
       expect do
-        # rubocop:disable Lint/UnreachableLoop
-        described_class.any?([1, 2, 3], concurrency: 2) do |_item|
-          raise 'fail'
-        end
-        # rubocop:enable Lint/UnreachableLoop
-      end.to raise_error(RuntimeError, 'fail')
+                described_class.any?([1, 2, 3], concurrency: 2) do |_item|
+                  raise 'fail'
+                end
+              end.to raise_error(RuntimeError, 'fail')
     end
   end
 
