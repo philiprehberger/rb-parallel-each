@@ -3,7 +3,7 @@
 [![Tests](https://github.com/philiprehberger/rb-parallel-each/actions/workflows/ci.yml/badge.svg)](https://github.com/philiprehberger/rb-parallel-each/actions/workflows/ci.yml)
 [![Gem Version](https://badge.fury.io/rb/philiprehberger-parallel_each.svg)](https://rubygems.org/gems/philiprehberger-parallel_each)
 [![License](https://img.shields.io/github/license/philiprehberger/rb-parallel-each)](LICENSE)
-[![Sponsor](https://img.shields.io/badge/sponsor-%E2%9D%A4-pink)](https://github.com/sponsors/philiprehberger)
+[![Sponsor](https://img.shields.io/badge/sponsor-GitHub%20Sponsors-ec6cb9)](https://github.com/sponsors/philiprehberger)
 
 Parallel iteration with configurable thread pool and ordered results
 
@@ -16,7 +16,7 @@ Parallel iteration with configurable thread pool and ordered results
 Add to your Gemfile:
 
 ```ruby
-gem 'philiprehberger-parallel_each'
+gem "philiprehberger-parallel_each"
 ```
 
 Or install directly:
@@ -28,7 +28,7 @@ gem install philiprehberger-parallel_each
 ## Usage
 
 ```ruby
-require 'philiprehberger/parallel_each'
+require "philiprehberger/parallel_each"
 
 # Parallel map (results preserve input order)
 results = Philiprehberger::ParallelEach.map(urls, concurrency: 8) do |url|
@@ -117,4 +117,4 @@ bundle exec rubocop
 
 ## License
 
-MIT
+[MIT](LICENSE)
