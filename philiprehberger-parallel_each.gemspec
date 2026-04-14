@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.authors = ['Philip Rehberger']
   spec.email = ['me@philiprehberger.com']
   spec.summary = 'Parallel iteration with configurable thread pool and ordered results'
-  spec.description = 'Parallel map, each, select, and flat_map with a configurable thread pool. ' \
-                     'Results maintain input order. Handles errors gracefully.'
+  spec.description = 'Parallel iteration methods (map, each, select, reject, find, flat_map, any?, all?, none?, ' \
+                     'count, reduce) with a configurable thread pool. Results maintain input order.'
   spec.homepage = 'https://philiprehberger.com/open-source-packages/ruby/philiprehberger-parallel_each'
   spec.license = 'MIT'
   spec.required_ruby_version = '>= 3.1.0'
