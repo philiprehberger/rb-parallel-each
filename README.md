@@ -50,6 +50,14 @@ even = Philiprehberger::ParallelEach.select(numbers, concurrency: 4, &:even?)
 odd = Philiprehberger::ParallelEach.reject(numbers, concurrency: 4, &:even?)
 ```
 
+### Parallel Partition
+
+Evaluate a predicate on every element in parallel and split into `[truthy, falsy]` in a single pass, order preserved within each array:
+
+```ruby
+even, odd = Philiprehberger::ParallelEach.partition(numbers, concurrency: 4, &:even?)
+```
+
 ### Parallel Find
 
 ```ruby
@@ -130,6 +138,7 @@ end
 | `ParallelEach.each(collection, concurrency:) { \|item\| }` | Parallel each, returns original collection |
 | `ParallelEach.select(collection, concurrency:) { \|item\| }` | Parallel filter preserving input order |
 | `ParallelEach.reject(collection, concurrency:) { \|item\| }` | Parallel inverse filter preserving input order |
+| `ParallelEach.partition(collection, concurrency:) { \|item\| }` | Parallel partition returning `[truthy, falsy]` with order preserved |
 | `ParallelEach.flat_map(collection, concurrency:) { \|item\| }` | Parallel flat_map, flattens one level |
 | `ParallelEach.find(collection, concurrency:) { \|item\| }` | Short-circuit find, returns first match or nil |
 | `ParallelEach.any?(collection, concurrency:) { \|item\| }` | Short-circuit any? |

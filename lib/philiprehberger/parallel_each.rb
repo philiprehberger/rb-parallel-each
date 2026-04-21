@@ -130,6 +130,24 @@ module Philiprehberger
       results.reject(&:value).map { |r| arr[r.index] }
     end
 
+    # Parallel partition. Evaluates the block on every element and returns
+    # `[truthy_items, falsy_items]`, preserving input order within each array.
+    #
+    # @param collection [Enumerable] items to partition
+    # @param concurrency [Integer] number of threads (default: number of processors)
+    # @yield [item] block that returns truthy/falsy
+    # @return [Array<Array>] a two-element array `[truthy, falsy]`
+    def self.partition(collection, concurrency: Etc.nprocessors, &block)
+      return collection.partition(&block) if concurrency <= 1
+
+      pool = WorkerPool.new(concurrency: concurrency)
+      results = pool.run(collection, &block)
+      arr = collection.is_a?(Array) ? collection : collection.to_a
+      truthy = results.select(&:value).map { |r| arr[r.index] }
+      falsy  = results.reject(&:value).map { |r| arr[r.index] }
+      [truthy, falsy]
+    end
+
     # Parallel find with short-circuit behavior.
     # Returns the first element for which the block returns truthy, or nil.
     #
