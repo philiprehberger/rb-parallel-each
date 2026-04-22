@@ -305,4 +305,38 @@ RSpec.describe Philiprehberger::ParallelEach do
       end.to raise_error(TypeError, 'bad type')
     end
   end
+
+  describe '.partition' do
+    it 'returns [truthy, falsy] arrays preserving input order' do
+      truthy, falsy = described_class.partition([1, 2, 3, 4, 5, 6], concurrency: 3, &:even?)
+      expect(truthy).to eq([2, 4, 6])
+      expect(falsy).to eq([1, 3, 5])
+    end
+
+    it 'returns two empty arrays for an empty input' do
+      expect(described_class.partition([], concurrency: 4) { |_| true }).to eq([[], []])
+    end
+
+    it 'places everything in the truthy bucket when all elements match' do
+      expect(described_class.partition([1, 2, 3], concurrency: 2) { |_| true }).to eq([[1, 2, 3], []])
+    end
+
+    it 'places everything in the falsy bucket when nothing matches' do
+      expect(described_class.partition([1, 2, 3], concurrency: 2) { |_| false }).to eq([[], [1, 2, 3]])
+    end
+
+    it 'falls back to sequential partition when concurrency <= 1' do
+      expect(described_class.partition([1, 2, 3, 4], concurrency: 1, &:odd?)).to eq([[1, 3], [2, 4]])
+    end
+
+    it 'preserves order even when block durations vary' do
+      collection = (1..10).to_a
+      truthy, falsy = described_class.partition(collection, concurrency: 4) do |n|
+        sleep(0.01) if n.odd?
+        n.even?
+      end
+      expect(truthy).to eq([2, 4, 6, 8, 10])
+      expect(falsy).to eq([1, 3, 5, 7, 9])
+    end
+  end
 end

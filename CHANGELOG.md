@@ -7,6 +7,12 @@ and this gem adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-04-21
+
+### Added
+
+- `ParallelEach.partition` for parallel partitioning into `[truthy, falsy]` arrays with input order preserved
+
 ## [0.3.0] - 2026-04-14
 
 ### Added
