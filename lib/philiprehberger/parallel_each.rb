@@ -7,6 +7,22 @@ require_relative 'parallel_each/worker_pool'
 module Philiprehberger
   # Parallel iteration with configurable thread pool and ordered results.
   module ParallelEach
+    @last_stats = nil
+    @last_stats_mutex = Mutex.new
+
+    # Snapshot of stats from the most recent parallel run, or nil if no run yet.
+    #
+    # @return [Hash, nil] hash with keys :workers, :completed, :failed, :elapsed_seconds
+    def self.last_stats
+      @last_stats_mutex.synchronize { @last_stats }
+    end
+
+    # Internal: record the stats of the most recent run.
+    def self.record_stats(stats)
+      @last_stats_mutex.synchronize { @last_stats = stats.dup.freeze }
+    end
+    private_class_method :record_stats
+
     # Parallel map that preserves input order.
     #
     # @param collection [Enumerable] items to process

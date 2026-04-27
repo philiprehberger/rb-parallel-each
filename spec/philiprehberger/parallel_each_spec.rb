@@ -306,6 +306,77 @@ RSpec.describe Philiprehberger::ParallelEach do
     end
   end
 
+  describe '.last_stats' do
+    it 'reports correct workers, completed, failed, and elapsed for a successful run' do
+      described_class.map([1, 2, 3, 4], concurrency: 2) { |n| n * 2 }
+      stats = described_class.last_stats
+      expect(stats[:workers]).to eq(2)
+      expect(stats[:completed]).to eq(4)
+      expect(stats[:failed]).to eq(0)
+      expect(stats[:elapsed_seconds]).to be_a(Float)
+      expect(stats[:elapsed_seconds]).to be > 0
+    end
+
+    it 'increments failed when a block raises' do
+      expect do
+        described_class.map([1, 2, 3], concurrency: 2) do |n|
+          raise ArgumentError, 'boom' if n == 2
+
+          n
+        end
+      end.to raise_error(ArgumentError, 'boom')
+
+      stats = described_class.last_stats
+      expect(stats[:failed]).to be >= 1
+      expect(stats[:workers]).to eq(2)
+    end
+
+    it 'updates stats across multiple runs' do
+      described_class.map([1, 2, 3], concurrency: 2) { |n| n }
+      first = described_class.last_stats
+
+      described_class.map((1..10).to_a, concurrency: 4) { |n| n }
+      second = described_class.last_stats
+
+      expect(first[:workers]).to eq(2)
+      expect(first[:completed]).to eq(3)
+
+      expect(second[:workers]).to eq(4)
+      expect(second[:completed]).to eq(10)
+    end
+
+    it 'reports a positive Float for elapsed_seconds' do
+      described_class.map([1, 2, 3], concurrency: 2) { |_n| sleep(0.01) }
+      stats = described_class.last_stats
+      expect(stats[:elapsed_seconds]).to be_a(Float)
+      expect(stats[:elapsed_seconds]).to be > 0.0
+    end
+  end
+
+  describe Philiprehberger::ParallelEach::WorkerPool do
+    describe '#stats' do
+      it 'returns nil elapsed_seconds before any run' do
+        pool = described_class.new(concurrency: 2)
+        expect(pool.stats).to eq(workers: 2, completed: 0, failed: 0, elapsed_seconds: nil)
+      end
+
+      it 'reports completed and failed after a run' do
+        pool = described_class.new(concurrency: 3)
+        expect do
+          pool.run([1, 2, 3, 4]) do |n|
+            raise 'fail' if n == 3
+
+            n
+          end
+        end.to raise_error(RuntimeError, 'fail')
+
+        expect(pool.stats[:workers]).to eq(3)
+        expect(pool.stats[:failed]).to be >= 1
+        expect(pool.stats[:elapsed_seconds]).to be_a(Float)
+      end
+    end
+  end
+
   describe '.partition' do
     it 'returns [truthy, falsy] arrays preserving input order' do
       truthy, falsy = described_class.partition([1, 2, 3, 4, 5, 6], concurrency: 3, &:even?)

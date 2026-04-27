@@ -114,6 +114,20 @@ Philiprehberger::ParallelEach.map(items, concurrency: 2) { |i| i * 2 }
 Philiprehberger::ParallelEach.map(items) { |i| i * 2 }
 ```
 
+### Stats
+
+After a parallel run, inspect the most recent run's stats with `last_stats`:
+
+```ruby
+Philiprehberger::ParallelEach.map(items, concurrency: 4) { |i| process(i) }
+
+Philiprehberger::ParallelEach.last_stats
+# => { workers: 4, completed: 10, failed: 0, elapsed_seconds: 0.123 }
+```
+
+`last_stats` returns `nil` until the first run completes. `elapsed_seconds` is `nil`
+when no run has finished. Stats are reset and updated on each run.
+
 ### Error Handling
 
 If any block raises an exception, the first error is re-raised after all threads finish:
@@ -148,6 +162,7 @@ end
 | `ParallelEach.each_with_index(collection, concurrency:) { \|item, idx\| }` | Parallel each with index |
 | `ParallelEach.count(collection, concurrency:) { \|item\| }` | Count matching elements |
 | `ParallelEach.reduce(collection, initial, concurrency:) { \|acc, item\| }` | Sequential reduction |
+| `ParallelEach.last_stats` | Hash of stats from the most recent run (`workers`, `completed`, `failed`, `elapsed_seconds`), or nil |
 
 ## Development
 
